@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <script type="text/javascript">
+         var sock = null;
+         var ellog = null;
+
+         window.onload = function() {
+
+            var wsuri;
+            ellog = document.getElementById('log');
+			elvolume = document.getElementById('volume');
+
+            if (window.location.protocol === "file:") {
+               wsuri = "ws://localhost:9000";
+            } else {
+               wsuri = "ws://" + window.location.hostname + ":9000";
+            }
+
+            if ("WebSocket" in window) {
+               sock = new WebSocket(wsuri);
+            } else if ("MozWebSocket" in window) {
+               sock = new MozWebSocket(wsuri);
+            } else {
+               log("Browser does not support WebSocket!");
+               window.location = "http://autobahn.ws/unsupportedbrowser";
+            }
+
+            if (sock) {
+               sock.onopen = function() {
+                  log("Connected to " + wsuri);
+               }
+
+               sock.onclose = function(e) {
+                  log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
+                  sock = null;
+               }
+
+               sock.onmessage = function(e) {
+				  setVolume(parseFloat(e.data)*-1); //make negative
+                  //log("Volume is: " + e.data);
+               }
+            }
+         };
+		 
+		 function setVolume(volume){
+			elvolume.innerHTML = volume;
+		 }
+
+         function log(m) {
+            ellog.innerHTML += m + '\n';
+            ellog.scrollTop = ellog.scrollHeight;
+         };
+      </script>
+   </head>
+   <body>
+      <h1>VolumeSocket Broadcast Demo</h1>
+      <noscript>You must enable JavaScript</noscript>
+	  <p>
+	  Volume is: <span id="volume"></span>
+	  </p>
+      <pre id="log" style="height: 20em; overflow-y: scroll; background-color: #faa;"></pre>
+   </body>
+</html>
