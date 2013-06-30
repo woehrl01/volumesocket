@@ -1,9 +1,9 @@
 # VolumeSocket
 
-This application broadcasts the current ambient volume via websocket.
-The volume is recorded via microphone.
+This server application broadcasts the current ambient volume via websocket.
+The volume is recorded via the attached microphone.
 
-**Test with Python 2.7**
+**Tested with Python 2.7**
 
 ####Required Libraries:
 
