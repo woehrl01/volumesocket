@@ -13,3 +13,6 @@ The volume is recorded via the attached microphone.
 * Numpy ([http://www.numpy.org/](http://www.numpy.org/))
 
 Can all be optained via `easy_install` or google.
+
+##
+*Licensed under the Apache License, Version 2.0 (the "License");*
