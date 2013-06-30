@@ -37,7 +37,7 @@
                }
 
                sock.onmessage = function(e) {
-				  setVolume(parseFloat(e.data)*-1); //make negative
+				  setVolume(parseFloat(e.data));
                   //log("Volume is: " + e.data);
                }
             }

@@ -54,6 +54,15 @@ def usage():
    print ""
 
 
+
+def calcLevel(chunk):
+   """ 
+   Calculates and retuns the level of the input samples
+   """
+   data = numpy.array(chunk, dtype=float) / 32768.0
+   ms = math.sqrt(numpy.sum(data ** 2.0) / len(data))
+   return ms
+
 def calcLoudness(chunk):
    '''
    This method copyright: https://code.google.com/p/pygalaxy/ (LGPL)
@@ -66,8 +75,7 @@ def calcLoudness(chunk):
    be -1dB, typical silence is -36dB.
 
    '''
-   data = numpy.array(chunk, dtype=float) / 32768.0
-   ms = math.sqrt(numpy.sum(data ** 2.0) / len(data))
+   ms = calcLevel(chunk)
    if ms < 10e-8: ms = 10e-8
    return 10.0 * math.log(ms, 10.0)
 
@@ -110,9 +118,9 @@ class BroadcastServerFactory(WebSocketServerFactory):
    def tick(self):
       rawsamps = self.stream.read(1024)
       samps = numpy.fromstring(rawsamps, dtype=numpy.int16)
-      loudness = calcLoudness(samps)
-      loudness *= -1 #make positive to safe space on sending 
-      self.broadcast("%.2f" % loudness)
+      loudness = calcLevel(samps) #the root mean square
+      #loudness = calcLoudness(samps) #in Decibel 
+      self.broadcast("%.5f" % loudness)
       reactor.callLater(self.interval, self.tick)
 
    def register(self, client):
@@ -167,13 +175,14 @@ def main():
    print "  Port: %d" % port
    print "  Device number: %d" % device
 
-
+   #init and startup websocket
    factory = BroadcastServerFactory("ws://localhost:%d" % port, debug = debug, debugCodePaths = debug, interval = interval, device=device)
 
    factory.protocol = BroadcastServerProtocol
    factory.setProtocolOptions(allowHixie76 = True)
    listenWS(factory)
 
+   #provide local directory as http for testing
    webdir = File(".")
    web = Site(webdir)
    reactor.listenTCP(8080, web)
