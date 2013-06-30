@@ -9,7 +9,7 @@
 
             var wsuri;
             ellog = document.getElementById('log');
-			elvolume = document.getElementById('volume');
+            elvolume = document.getElementById('volume');
 
             if (window.location.protocol === "file:") {
                wsuri = "ws://localhost:9000";
@@ -37,15 +37,15 @@
                }
 
                sock.onmessage = function(e) {
-				  setVolume(parseFloat(e.data));
+                  setVolume(parseFloat(e.data));
                   //log("Volume is: " + e.data);
                }
             }
          };
 		 
-		 function setVolume(volume){
-			elvolume.innerHTML = volume;
-		 }
+         function setVolume(volume){
+            elvolume.innerHTML = volume;
+         }
 
          function log(m) {
             ellog.innerHTML += m + '\n';
@@ -56,9 +56,9 @@
    <body>
       <h1>VolumeSocket Broadcast Demo</h1>
       <noscript>You must enable JavaScript</noscript>
-	  <p>
-	  Volume is: <span id="volume"></span>
-	  </p>
+      <p>
+         Volume is: <span id="volume"></span>
+      </p>
       <pre id="log" style="height: 20em; overflow-y: scroll; background-color: #faa;"></pre>
    </body>
 </html>
