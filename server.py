@@ -100,23 +100,31 @@ class BroadcastServerFactory(WebSocketServerFactory):
    currently connected clients.
    """
 
-   def __init__(self, url, debug = False, debugCodePaths = False, interval = 0.250, device = 2):
+   def __init__(self, url, debug = False, debugCodePaths = False, interval = 0.250):
       WebSocketServerFactory.__init__(self, url, debug = debug, debugCodePaths = debugCodePaths)
       self.clients = []
       self.debug = debug
       self.interval = interval
-      #prepare audio input
-      pyaud = pyaudio.PyAudio()
-      self.stream = pyaud.open(
+      self.pyaud = pyaudio.PyAudio()
+      channel_count = self.pyaud.get_default_input_device_info()['maxInputChannels']
+      self.stream = self.pyaud.open(
                   format = pyaudio.paInt16,
-                  channels = 1,
+                  channels = channel_count,
                   rate = 44100,
-                  input_device_index = device,
+                  frames_per_buffer = 1024,
                   input = True)
       self.tick()
 
+   def __del__(self):
+      self.stream.close()
+      self.pyaud.terminate()
+
    def tick(self):
+      #prepare audio input
+      self.stream.start_stream()
       rawsamps = self.stream.read(1024)
+      self.stream.stop_stream()
+      
       samps = numpy.fromstring(rawsamps, dtype=numpy.int16)
       loudness = calcLevel(samps) #the root mean square
       #loudness = calcLoudness(samps) #in Decibel 
@@ -146,11 +154,10 @@ class BroadcastServerFactory(WebSocketServerFactory):
 def main():    
    debug = DEFAULT_DEBUG
    interval = DEFAULT_INTERVAL
-   device = DEFAULT_DEVICE_NO
    port = DEFAULT_PORT
 
    try:
-      opts, args = getopt.getopt(sys.argv[1:], "hi:d:p:", ["help", "interval=", "debug", "device=", "port="])
+      opts, args = getopt.getopt(sys.argv[1:], "hi:p:", ["help", "interval=", "debug", "port="])
    except getopt.GetoptError:
       usage()
       sys.exit(2)
@@ -159,8 +166,6 @@ def main():
       if opt in ("-h", "--help"):
          usage()
          sys.exit()
-      elif opt in ("-d", "--device"):
-         device = int(arg)
       elif opt in ("--debug"):
          log.startLogging(sys.stdout)
          debug = True
@@ -173,10 +178,9 @@ def main():
    print "  Debug: %r" % debug
    print "  Interval: %d ms" % (interval * 1000)
    print "  Port: %d" % port
-   print "  Device number: %d" % device
 
    #init and startup websocket
-   factory = BroadcastServerFactory("ws://localhost:%d" % port, debug = debug, debugCodePaths = debug, interval = interval, device=device)
+   factory = BroadcastServerFactory("ws://localhost:%d" % port, debug = debug, debugCodePaths = debug, interval = interval)
 
    factory.protocol = BroadcastServerProtocol
    factory.setProtocolOptions(allowHixie76 = True)
